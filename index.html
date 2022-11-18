@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Raleway&display=swap"
+      rel="stylesheet"
+    />
+    <title>WordPress REST API</title>
+  </head>
+  <body>
+    <h1>WordPress REST API</h1>
+    <form id="WP-form">
+      <label for="link">Link de algun sitio hecho en WordPress:</label>
+      <br />
+      <input type="link" name="link" id="link" />
+      <input type="submit" name="Submit" />
+    </form>
+    <article id="site" class="site"></article>
+    <section id="posts" class="posts"></section>
+    <div class="loader">
+      <h2>Loading site...</h2>
+      <img
+        src="https://raw.githubusercontent.com/SamHerbert/SVG-Loaders/5deed925369e57e9c58ba576ce303466984db501/svg-loaders/three-dots.svg"
+        alt="Loading..."
+      />
+    </div>
+    <template id="post-template">
+      <article class="post">
+        <img class="post-image" />
+        <aside>
+          <h2 class="post-title"></h2>
+          <figure class="post-author"></figure>
+          <small class="post-date"></small>
+          <a class="post-link" target="_blank">Ver publicación original</a>
+          <div class="post-excerpt"></div>
+          <div class="post-categories"></div>
+          <div class="post-tags"></div>
+          <details class="post-content">
+            <summary>Ver contenido de la publicación</summary>
+            <article></article>
+          </details>
+        </aside>
+        <a></a>
+      </article>
+      <hr />
+    </template>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
