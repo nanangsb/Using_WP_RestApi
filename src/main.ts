@@ -16,32 +16,41 @@ const d: Document = document,
   $fragment: DocumentFragment = d.createDocumentFragment(),
   $template: DocumentFragment = $postTemplate.content
 
-const templateQuery = <TypeHTMLElement>(
-  htmlNameElement: string
-): TypeHTMLElement =>
-  $template.querySelector(htmlNameElement) as TypeHTMLElement
+const templateQuery = <TypeElement extends HTMLElement>(
+  htmlNameElement: keyof HTMLElementTagNameMap | string
+): TypeElement => $template.querySelector(htmlNameElement) as TypeElement
 
+const removeAllChilds = <TypeHTMLElement extends HTMLElement>(
+  parent: TypeHTMLElement
+): void => {
+  while (parent.lastChild) {
+    parent.removeChild(parent.lastChild)
+  }
+}
 /**
- * This function handle errors from fetch requests.
  * @param toFetch Request path.
  * @param resFormat Response format valid values: 'text' 'json' 'blob'.
  * @param success Handling the parsed response format.
- * @param errHand Optional for custom error handling.
+ * @param config Optional fetch config.
  */
 async function fetching(
   toFetch: string,
-  resFormat: 'text' | 'blob' | 'json',
-  success: (data: [] | {} | string | any) => void,
+  resFormat: 'text' | 'json' | 'blob',
+  success: (data: any) => void,
   error: (err: Object | FetchError | undefined) => void,
   config?: RequestInit
 ): Promise<void> {
   try {
     let response: Response
-    if (config) response = await fetch(toFetch, config)
-    else response = await fetch(toFetch)
+
+    //prettier-ignore
+    config
+      ? response = await fetch(toFetch, config)
+      : response = await fetch(toFetch)
 
     if (!response.ok)
       throw { status: response.status, statusText: response.statusText }
+
     let data: any
 
     if (resFormat === 'text') data = await response.text()
@@ -56,20 +65,23 @@ async function fetching(
 /**
  * USE THIS ON CATCH ERRORS ONLY. Common error handling structure.
  * @param err An object type Error.
- * @param htmlElement An HTML Element.
+ * @param parentElement Parent Element to put the Error message.
  * @param tagPlaceError HTML tag to place the Error message.
- * @param errHand Apply extra logic to the error response.
  */
 function fetchErrHandler(
   err: { [index: string]: any } | (FetchError & Error),
-  htmlElement: HTMLElement,
+  parentElement: HTMLElement,
   tagPlaceError: keyof HTMLElementTagNameMap
 ): void {
-  htmlElement.innerHTML = `<${tagPlaceError}>Error ${
-    err.status || err.name || 'Unknown'
-  }: ${
-    err.statusText || err.cause || 'An error occurred while fetching the URI'
-  }</${tagPlaceError}>`
+  let element = document.createElement(tagPlaceError)
+
+  element.textContent = `Error ${err.status || err.name || 'Unknown'}: ${
+    err.statusText ||
+    err.message ||
+    'An error has occurred while fethcing the URI'
+  }`
+
+  parentElement.appendChild(element)
 }
 
 //https://developer.wordpress.org/rest-api/reference/
@@ -132,7 +144,7 @@ function wpInfinitePostsScroll(
   const observer = new IntersectionObserver(handleIntersec, {
     root: null,
     threshold: 1,
-    rootMargin: '490px 0px',
+    rootMargin: '730px 0px',
   })
   observer.observe(observed)
 }
@@ -218,7 +230,7 @@ async function getWPPosts(siteLink: string): Promise<void> {
             <figcaption>${postAuthor.name}</figcaption>
           `
         templateQuery<HTMLElement>('.post-date').textContent = new Date(
-          post.date
+          post.date || '--/--/--'
         ).toLocaleString()
 
         templateQuery<HTMLLinkElement>('.post-link').href = post.link
@@ -270,8 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
         wpSiteInformation($wpPostForm.link.value)
         getWPPosts($wpPostForm.link.value)
       } else {
-        $site.innerHTML = ''
-        $posts.innerHTML = ''
+        removeAllChilds($site)
+        removeAllChilds($posts)
         wpSiteInformation($wpPostForm.link.value)
         getWPPosts($wpPostForm.PostForm.link.value)
       }
