@@ -128,7 +128,8 @@ hr {
   margin: auto;
 }
 
-.loader {
+.post-loader,
+.site-loader {
   display: none;
   margin: 2rem auto;
 }
