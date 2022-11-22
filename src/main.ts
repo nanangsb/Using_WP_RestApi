@@ -1,8 +1,11 @@
 import { templateQuery, deleteChilds } from './helpers/dom'
-
 import { fetchErrHandler, fetching } from './helpers/fetch'
 import WPRESTAPI from './models/WPRESTAPI'
+
 const d: Document = document,
+  $wpPostForm = document.querySelector<HTMLFormElement>(
+    '#WP-form'
+  ) as HTMLFormElement,
   $site = d.querySelector<HTMLElement>('#site') as HTMLElement,
   $posts = d.querySelector<HTMLElement>('#posts') as HTMLElement,
   $postLoader = d.querySelector<HTMLDivElement>(
@@ -16,6 +19,8 @@ const d: Document = document,
   ) as HTMLTemplateElement,
   $fragment: DocumentFragment = d.createDocumentFragment(),
   $t: DocumentFragment = $template.content
+
+let observer: IntersectionObserver = new IntersectionObserver(() => {}, {})
 
 function wpSiteInformation(site: WPRESTAPI): void {
   fetching(
@@ -43,22 +48,19 @@ function wpSiteInformation(site: WPRESTAPI): void {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('submit', async (e: SubmitEvent) => {
-    const $wpPostForm = document.querySelector<HTMLFormElement>(
-      '#WP-form'
-    ) as HTMLFormElement
-
     if (e.target === $wpPostForm) {
       e.preventDefault()
-      debugger
+
       if ($site.innerHTML !== '') deleteChilds($site)
       if ($posts.innerHTML !== '') deleteChilds($posts)
-
       $siteLoader.style.display = 'block'
       $postLoader.style.display = 'block'
 
       const url = $wpPostForm.link.value
-      const site = new WPRESTAPI(url)
 
+      if (url === '') observer.disconnect()
+
+      const site = new WPRESTAPI(url)
       site.setUpdateResource('posts', '/posts?_embed&per_page=4')
 
       wpSiteInformation(site)
@@ -145,8 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      await fetchResource(site.getResource('posts'))
-
       const nextPage = (() => {
         let page = 2
         return () => {
@@ -154,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
           return page
         }
       })()
-      const p = nextPage
 
       const handleIntersec: IntersectionObserverCallback = async (
         entries: IntersectionObserverEntry[]
@@ -163,28 +162,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (entry.isIntersecting) {
           site.setUpdateResource(
             'posts',
-            `/posts?_embed&per_page=4&page=${p()}`
+            `/posts?_embed&per_page=4&page=${nextPage()}`
           )
           await fetchResource(site.getResource('posts'))
         }
       }
-      const observer = new IntersectionObserver(handleIntersec, {
+      observer = new IntersectionObserver(handleIntersec, {
         root: null,
         threshold: 1,
         rootMargin: '740px 0px',
       })
 
+      d.addEventListener('change', () => observer.disconnect())
+      await fetchResource(site.getResource('posts'))
+
       observer.observe($postLoader)
 
-      d.addEventListener('change', () => {
-        observer.unobserve($postLoader)
-      })
-
-      if (url === '') {
-        d.querySelectorAll('.fetchErrHandlerError').forEach(el => {
-          el.textContent = 'An empty input was provided.'
-        })
-      }
       $wpPostForm.reset()
     }
   })
