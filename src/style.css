@@ -89,11 +89,11 @@ hr {
 }
 
 .post {
-  max-width: 80%;
+  max-width: 95%;
   margin: 1rem auto;
   padding: 1rem;
   border-radius: 0.5rem;
-  background-color: #242424;
+  background-color: #ffffff;
   text-align: center;
 }
 
